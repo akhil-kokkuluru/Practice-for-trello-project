@@ -39,9 +39,7 @@ const hasstatus = (arg) => {
     arg.category === undefined;
   if (ag) {
     if (arg.status !== undefined) {
-      if (arg.status !== "TO DO" || "IN PROGRESS" || "DONE") {
-        return true;
-      }
+      return true;
     } else {
       return false;
     }
@@ -144,7 +142,14 @@ app.get("/todos/", async (request, response) => {
   const { status, priority, search_q, category } = request.query;
   switch (true) {
     case hasstatus(request.query):
-      if (request.query.status === "TO DO" || "IN PROGRESS" || "DONE") {
+      sd =
+        request.query.status === "TO DO" ||
+        request.query.status === "IN PROGRESS" ||
+        request.query.status === "DONE";
+      if (sd === false) {
+        statement = "Invalid Todo Status";
+      }
+      if (sd) {
         statement = undefined;
         finalQuery = `
                 SELECT
@@ -152,9 +157,6 @@ app.get("/todos/", async (request, response) => {
                 FROM
                 todo
                 WHERE status = '${status}';`;
-      }
-      if (request.query.status !== "TO DO" || "IN PROGRESS" || "DONE") {
-        statement = "invlaid TODO";
       }
       break;
     case haspriority(request.query):
@@ -217,13 +219,14 @@ app.get("/todos/", async (request, response) => {
       break;
   }
 
-  if (statement === null) {
+  if (statement === undefined) {
     data = await db.all(finalQuery);
     response.send(data);
+    console.log(status);
   } else {
     response.status(400);
     response.send(statement);
     console.log(statement);
-    console.log("akhil");
+    console.log(status);
   }
 });
