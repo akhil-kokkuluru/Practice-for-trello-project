@@ -224,5 +224,6 @@ app.get("/todos/", async (request, response) => {
     response.status(400);
     response.send(statement);
     console.log(statement);
+    console.log("akhil");
   }
 });
