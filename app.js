@@ -135,6 +135,32 @@ const catprio = (argus) => {
   }
 };
 
+const prioritycheck = (a) => {
+  result =
+    a.priority === "HIGH" || a.priority === "MEDIUM" || a.priority === "LOW";
+  if (result === false) {
+    statement = "Invalid Todo Priority";
+  }
+  return result;
+};
+
+const statuscheck = (aq) => {
+  results =
+    aq.status === "TO DO" ||
+    aq.status === "IN PROGRESS" ||
+    aq.status === "DONE";
+  return results;
+};
+
+const categorycheck = (aqk) => {
+  resultsk =
+    aqk.status === "WORK" || aqk.status === "HOME" || aqk.status === "LEARNING";
+  if (resultsk === false) {
+    statement = "Invalid Todo Category";
+  }
+  return resultsk;
+};
+
 app.get("/todos/", async (request, response) => {
   let statement = undefined;
   let data = null;
@@ -160,6 +186,12 @@ app.get("/todos/", async (request, response) => {
       }
       break;
     case haspriority(request.query):
+      let k = prioritycheck(request.query);
+      if (k) {
+        statement = undefined;
+      } else if (k === false) {
+        statement = "Invalid Todo Priority";
+      }
       finalQuery = `
         SELECT
         *
@@ -168,11 +200,23 @@ app.get("/todos/", async (request, response) => {
         WHERE priority = '${priority}';`;
       break;
     case hasboth(request.query):
+      let hk = prioritycheck(request.query);
+      if (hk) {
+        statement = undefined;
+      } else {
+        statement = "Invalid Todo Priority";
+      }
+      let kh = statuscheck(request.query);
+      if (kh === true && hk === false) {
+        statement = "Invalid Todo Priority";
+      } else if (kh !== true && hk !== false) {
+        statement = "Invalid Todo Status";
+      }
       finalQuery = `SELECT
         *
         FROM
         todo
-        WHERE status = '${status}' and priority = '${priority};`;
+        WHERE status = '${status}' AND priority = '${priority}';`;
       break;
     case onlysearch(request.query):
       finalQuery = `
@@ -184,6 +228,8 @@ app.get("/todos/", async (request, response) => {
         todo LIKE '%${search_q}%';`;
       break;
     case categoryStatus(request.query):
+      statuscheck(request.query);
+      categorycheck(request.query);
       finalQuery = `
         SELECT
         *
@@ -193,6 +239,7 @@ app.get("/todos/", async (request, response) => {
         category = '${category}' and status = '${status}';`;
       break;
     case onlycategory(request.query):
+      categorycheck(request.query);
       finalQuery = `
         SELECT
         *
@@ -202,6 +249,8 @@ app.get("/todos/", async (request, response) => {
         category = '${category}';`;
       break;
     case catprio(request.query):
+      categorycheck(request.query);
+      prioritycheck(request.query);
       finalQuery = `
         SELECT
         *
@@ -218,15 +267,13 @@ app.get("/todos/", async (request, response) => {
         todo;`;
       break;
   }
-
   if (statement === undefined) {
     data = await db.all(finalQuery);
     response.send(data);
-    console.log(status);
-  } else {
+  } else if (statement !== undefined) {
     response.status(400);
-    response.send(statement);
-    console.log(statement);
-    console.log(status);
+    response.send(`${statement}`);
   }
 });
+
+module.exports = app;
