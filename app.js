@@ -154,7 +154,9 @@ const statuscheck = (aq) => {
 
 const categorycheck = (aqk) => {
   resultsk =
-    aqk.status === "WORK" || aqk.status === "HOME" || aqk.status === "LEARNING";
+    aqk.category === "WORK" ||
+    aqk.category === "HOME" ||
+    aqk.category === "LEARNING";
   if (resultsk === false) {
     statement = "Invalid Todo Category";
   }
@@ -228,8 +230,15 @@ app.get("/todos/", async (request, response) => {
         todo LIKE '%${search_q}%';`;
       break;
     case categoryStatus(request.query):
-      statuscheck(request.query);
-      categorycheck(request.query);
+      let ctc = categorycheck(request.query);
+      let sc = statuscheck(request.query);
+      if (ctc && sc) {
+        statement = undefined;
+      } else if (ctc === false && sc === true) {
+        statement = "Invalid Todo Category";
+      } else if (ctc === true && sc === false) {
+        statement = "Invalid Todo Status";
+      }
       finalQuery = `
         SELECT
         *
@@ -239,7 +248,12 @@ app.get("/todos/", async (request, response) => {
         category = '${category}' and status = '${status}';`;
       break;
     case onlycategory(request.query):
-      categorycheck(request.query);
+      let g = categorycheck(request.query);
+      if (g) {
+        statement = undefined;
+      } else {
+        statement = "Invalid Todo Category";
+      }
       finalQuery = `
         SELECT
         *
@@ -249,6 +263,16 @@ app.get("/todos/", async (request, response) => {
         category = '${category}';`;
       break;
     case catprio(request.query):
+      let Actc = categorycheck(request.query);
+      let Asc = prioritycheck(request.query);
+      if (Actc && Asc) {
+        statement = undefined;
+      } else if (Actc === false && Asc === true) {
+        statement = "Invalid Todo Category";
+      } else if (Actc === true && Asc === false) {
+        statement = "Invalid Todo Priority";
+      }
+
       categorycheck(request.query);
       prioritycheck(request.query);
       finalQuery = `
