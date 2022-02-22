@@ -1,12 +1,10 @@
-POST http://localhost:3000/todos/
+PUT http://localhost:3000/todos/3/
 Content-Type: : application/json
 
-    {
-    "id": 6,
-    "todo": "Finalize event theme",
-    "priority": "LOW",
-    "status": "TO DO",
-    "category": "HOME",
-    "dueDate": "2021-02-22"
-    }
-     
+{"status": "alalalaa"}
+
+###
+
+PUT http://localhost:3000/akhil/ HTTP/1.1
+Content-Type: application/json
+

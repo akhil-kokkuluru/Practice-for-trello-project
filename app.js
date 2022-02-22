@@ -354,3 +354,68 @@ app.post("/todos/", async (request, response) => {
   await db.run(postTodoQuery);
   response.send("Todo Successfully Added");
 });
+
+//   5) API- 6
+
+app.put("/todos/:todoId/", async (request, response) => {
+  const todoId = request.params;
+  const { Requestbody } = request.body;
+  let responseString;
+  switch (true) {
+    case Requestbody.status !== undefined:
+      responseString = "Status";
+      break;
+    case Requestbody.todo !== undefined:
+      responseString = "Todo";
+      break;
+    case Requestbody.priority !== undefined:
+      responseString = "Priority";
+      break;
+    case Requestbody.category !== undefined:
+      responseString = "Category";
+      break;
+    case Requestbody.due_date !== undefined:
+      responseString = "Due Date";
+      break;
+    default:
+      break;
+  }
+  const prevQuery = `
+      SELECT
+      *
+      FROM
+      todo
+      WHERE
+      id = ${todoId.todoId};`;
+  const prevVlues = await db.get(prevQuery);
+
+  const {
+    id = prevVlues.id,
+    todo = prevVlues.todo,
+    priority = prevVlues.priority,
+    status = prevVlues.status,
+    category = prevVlues.category,
+    due_date = prevVlues.due_date,
+  } = Requestbody;
+
+  const OriginalQuery = `
+      UPDATE
+      todo
+      SET
+      todo = '${todo}',
+      priority = '${priority}',
+      status = '${status}',
+      category = '${category}',
+      due_date = '${due_date}'
+      WHERE
+      id = ${todoId.todoId};`;
+  await db.run(OriginalQuery);
+  response.send(request.body);
+  //   response.send(`${responseString} Updated`);
+  console.log(responseString);
+});
+
+app.put("/akhil/", (request, response) => {
+  const { newpara } = request.body;
+  response.send(request.body);
+});
