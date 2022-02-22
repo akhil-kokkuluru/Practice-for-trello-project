@@ -321,24 +321,19 @@ app.get("/todos/:todoId/", async (request, response) => {
 });
 
 //   3) GET API-3
-
 app.get("/agenda/", async (request, response) => {
   const { date } = request.query;
-  let dates;
-  let validation = isValid(new Date(dates));
-  if (validation) {
-    dates = format(new Date(date), "yyyy-MM-dd");
-  }
-
+  let valida = isValid(new Date(date));
   let datetodo;
-  const agendaQuery = `
-  SELECT
-  *
-  FROM
-  todo
-  WHERE
-  due_date = '${dates}';`;
-  if (validation) {
+  if (valida) {
+    let dates = format(new Date(date), "yyyy-MM-dd");
+    const agendaQuery = `
+    SELECT
+    *
+    FROM
+    todo
+    WHERE
+    due_date = '${dates}';`;
     datetodo = await db.get(agendaQuery);
     response.send(datetodo);
   } else {
