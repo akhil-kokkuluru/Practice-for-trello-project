@@ -30,7 +30,9 @@ const serverInitialization = async () => {
 
 serverInitialization();
 
-// ////////////////////////////
+module.exports = app;
+
+// QUERY CHECKING UTILITIES
 
 const hasstatus = (arg) => {
   let ag =
@@ -162,6 +164,8 @@ const categorycheck = (aqk) => {
   }
   return resultsk;
 };
+
+// 1) GET API
 
 app.get("/todos/", async (request, response) => {
   let statement = undefined;
@@ -300,4 +304,18 @@ app.get("/todos/", async (request, response) => {
   }
 });
 
-module.exports = app;
+//  2) GET API-2
+
+app.get("/todos/:todoId/", async (request, response) => {
+  const { todoId } = request.params;
+
+  const getTodoQuery = `
+    SELECT
+      *
+    FROM
+      todo
+    WHERE
+      id = ${todoId};`;
+  const todoLi = await db.get(getTodoQuery);
+  response.send(todoLi);
+});
