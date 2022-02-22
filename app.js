@@ -14,7 +14,7 @@ const DBpath = path.join(__dirname, "todoApplication.db");
 
 let db = null;
 
-const { format } = require("date-fns");
+const { format, isValid } = require("date-fns");
 
 const serverInitialization = async () => {
   try {
@@ -318,4 +318,31 @@ app.get("/todos/:todoId/", async (request, response) => {
       id = ${todoId};`;
   const todoLi = await db.get(getTodoQuery);
   response.send(todoLi);
+});
+
+//   3) GET API-3
+
+app.get("/agenda/", async (request, response) => {
+  const { date } = request.query;
+  let dates;
+  let validation = isValid(new Date(dates));
+  if (validation) {
+    dates = format(new Date(date), "yyyy-MM-dd");
+  }
+
+  let datetodo;
+  const agendaQuery = `
+  SELECT
+  *
+  FROM
+  todo
+  WHERE
+  due_date = '${dates}';`;
+  if (validation) {
+    datetodo = await db.get(agendaQuery);
+    response.send(datetodo);
+  } else {
+    response.status(400);
+    response.send("Invalid Due Date");
+  }
 });
