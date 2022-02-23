@@ -358,64 +358,58 @@ app.post("/todos/", async (request, response) => {
 //   5) API- 6
 
 app.put("/todos/:todoId/", async (request, response) => {
-  const todoId = request.params;
-  const { Requestbody } = request.body;
-  let responseString;
+  const { todoId } = request.params;
+  let updatedAttribute;
+  const requestBody = request.body;
   switch (true) {
-    case Requestbody.status !== undefined:
-      responseString = "Status";
+    case requestBody.status !== undefined:
+      updatedAttribute = "Status";
       break;
-    case Requestbody.todo !== undefined:
-      responseString = "Todo";
+    case requestBody.todo !== undefined:
+      updatedAttribute = "Todo";
       break;
-    case Requestbody.priority !== undefined:
-      responseString = "Priority";
+    case requestBody.priority !== undefined:
+      updatedAttribute = "Priority";
       break;
-    case Requestbody.category !== undefined:
-      responseString = "Category";
+    case requestBody.category !== undefined:
+      updatedAttribute = "Category";
       break;
-    case Requestbody.due_date !== undefined:
-      responseString = "Due Date";
+    case requestBody.due_date !== undefined:
+      updatedAttribute = "Due Date";
       break;
+
     default:
+      updatedAttribute = "No updation given";
       break;
   }
-  const prevQuery = `
-      SELECT
-      *
-      FROM
-      todo
-      WHERE
-      id = ${todoId.todoId};`;
-  const prevVlues = await db.get(prevQuery);
 
+  const previousQuery = `
+    SELECT
+    *
+    FROM
+    todo
+    WHERE
+    id = ${todoId};`;
+  const previousValues = await db.get(previousQuery);
   const {
-    id = prevVlues.id,
-    todo = prevVlues.todo,
-    priority = prevVlues.priority,
-    status = prevVlues.status,
-    category = prevVlues.category,
-    due_date = prevVlues.due_date,
-  } = Requestbody;
+    todo = previousValues.todo,
+    priority = previousValues.priority,
+    status = previousValues.status,
+    category = previousValues.category,
+    due_date = previousValues.due_date,
+  } = requestBody;
 
-  const OriginalQuery = `
-      UPDATE
-      todo
-      SET
-      todo = '${todo}',
-      priority = '${priority}',
-      status = '${status}',
-      category = '${category}',
-      due_date = '${due_date}'
-      WHERE
-      id = ${todoId.todoId};`;
-  await db.run(OriginalQuery);
-  response.send(request.body);
-  //   response.send(`${responseString} Updated`);
-  console.log(responseString);
-});
-
-app.put("/akhil/", (request, response) => {
-  const { newpara } = request.body;
-  response.send(request.body);
+  const putQuery = `
+UPDATE todo
+SET
+  todo = '${todo}',
+  priority = '${priority}',
+  status = '${status}',
+  category = '${category}',
+  due_date = '${due_date}'
+WHERE
+id = ${todoId}
+`;
+  await db.run(putQuery);
+  response.send(`${updatedAttribute} Updated`);
 });
