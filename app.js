@@ -190,6 +190,18 @@ const categorycheck2 = (aqk) => {
   return resultsk;
 };
 
+const camelCase = (arr) => {
+  let queryObject = {
+    id: arr.id,
+    todo: arr.todo,
+    priority: arr.priority,
+    status: arr.status,
+    category: arr.category,
+    dueDate: arr.due_date,
+  };
+  return queryObject;
+};
+
 // 1) GET API
 
 app.get("/todos/", async (request, response) => {
@@ -333,16 +345,17 @@ app.get("/todos/", async (request, response) => {
 
 app.get("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
+  const IDquery = `
+  SELECT
+  *
+  FROM
+  todo
+  WHERE
+  id = ${todoId}`;
 
-  const getTodoQuery = `
-    SELECT
-      *
-    FROM
-      todo
-    WHERE
-      id = ${todoId};`;
-  const todoLi = await db.all(getTodoQuery);
-  response.send(todoLi);
+  const IdQueryList = await db.get(IDquery);
+
+  response.send(camelCase(IdQueryList));
 });
 
 //   3) GET API-3
@@ -363,8 +376,9 @@ app.get("/agenda/", async (request, response) => {
     WHERE due_date = '${date_new}';`;
 
   if (datevalidation) {
-    const agendaLIst = await db.get(dateQuery);
-    response.send(agendaLIst);
+    const agendaLIst = await db.all(dateQuery);
+
+    response.send([camelCase(agendaLIst[0])]);
   } else if (datevalidation === false) {
     response.status(400);
     response.send("Invalid Due Date");
@@ -510,12 +524,14 @@ id = ${todoId}
 
 app.delete("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
+  let an = "3";
   const deleteTodoQuery = `
   DELETE FROM
     todo
   WHERE
     id = ${todoId};`;
-
-  await db.run(deleteTodoQuery);
-  response.send("Todo Deleted");
+  if (an !== undefined) {
+    await db.run(deleteTodoQuery);
+    response.send("Todo Deleted");
+  }
 });
