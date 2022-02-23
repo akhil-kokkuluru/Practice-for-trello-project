@@ -375,13 +375,40 @@ app.get("/agenda/", async (request, response) => {
 
 app.post("/todos/", async (request, response) => {
   const { id, todo, priority, status, category, dueDate } = request.body;
+  let datevalidity = isValid(new Date(request.body.dueDate));
+
+  if (datevalidity) {
+    request.body.dueDate = format(new Date(request.body.dueDate), "yyyy-MM-dd");
+  }
+
+  let barrier;
+  switch (false) {
+    case statuscheck2(request.body):
+      barrier = "Invalid Todo Status";
+      break;
+    case prioritycheck2(request.body):
+      barrier = "Invalid Todo Priority";
+      break;
+    case categorycheck2(request.body):
+      barrier = "Invalid Todo Category";
+      break;
+    case datevalidity:
+      barrier = "Invalid Due Date";
+    default:
+      break;
+  }
   const postTodoQuery = `
   INSERT INTO
     todo (id, todo, priority, status, category, due_date)
   VALUES
     (${id}, '${todo}', '${priority}', '${status}', '${category}', '${dueDate}');`;
-  await db.run(postTodoQuery);
-  response.send("Todo Successfully Added");
+  if (barrier === undefined) {
+    await db.run(postTodoQuery);
+    response.send("Todo Successfully Added");
+  } else {
+    response.status(400);
+    response.send(barrier);
+  }
 });
 
 //   5) PUT API
