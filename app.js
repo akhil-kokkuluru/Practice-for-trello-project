@@ -355,31 +355,87 @@ app.post("/todos/", async (request, response) => {
   response.send("Todo Successfully Added");
 });
 
-//   5) API- 6
+//   5) PUT API
+
+// API utilities
+
+let controller;
+const prioritycheck2 = (a) => {
+  result =
+    a.priority === "HIGH" || a.priority === "MEDIUM" || a.priority === "LOW";
+  return result;
+};
+
+const statuscheck2 = (aq) => {
+  results =
+    aq.status === "TO DO" ||
+    aq.status === "IN PROGRESS" ||
+    aq.status === "DONE";
+  return results;
+};
+
+const categorycheck2 = (aqk) => {
+  resultsk =
+    aqk.category === "WORK" ||
+    aqk.category === "HOME" ||
+    aqk.category === "LEARNING";
+  return resultsk;
+};
 
 app.put("/todos/:todoId/", async (request, response) => {
+  controller = undefined;
   const { todoId } = request.params;
   let updatedAttribute;
   const requestBody = request.body;
   switch (true) {
     case requestBody.status !== undefined:
-      updatedAttribute = "Status";
+      if (statuscheck2(requestBody)) {
+        updatedAttribute = "Status Updated";
+      } else {
+        updatedAttribute = "Invalid Todo Status";
+        controller = "dont run query";
+      }
+
       break;
     case requestBody.todo !== undefined:
-      updatedAttribute = "Todo";
+      updatedAttribute = "Todo Updated";
+
       break;
     case requestBody.priority !== undefined:
-      updatedAttribute = "Priority";
+      if (prioritycheck2(requestBody)) {
+        updatedAttribute = "Priority Updated";
+      } else {
+        updatedAttribute = "Invalid Todo Priority";
+        controller = "DOnt run the query";
+      }
+
       break;
     case requestBody.category !== undefined:
-      updatedAttribute = "Category";
+      if (categorycheck2(requestBody)) {
+        updatedAttribute = "Category Updated";
+      } else {
+        updatedAttribute = "Invalid Todo Category";
+        controller = "dont run query";
+      }
       break;
-    case requestBody.due_date !== undefined:
-      updatedAttribute = "Due Date";
+    case requestBody.dueDate !== undefined:
+      let datevalidation = isValid(new Date(requestBody.dueDate));
+      if (datevalidation) {
+        requestBody.dueDate = format(
+          new Date(requestBody.dueDate),
+          "yyyy-MM-dd"
+        );
+        updatedAttribute = "Due Date Updated";
+      } else {
+        updatedAttribute = "Invalid Due Date";
+        controller = "Dont run the query";
+      }
+
       break;
 
     default:
-      updatedAttribute = "No updation given";
+      updatedAttribute = "Invalid Due Date";
+      controller = "Dont run the query";
       break;
   }
 
@@ -410,6 +466,25 @@ SET
 WHERE
 id = ${todoId}
 `;
-  await db.run(putQuery);
-  response.send(`${updatedAttribute} Updated`);
+  if (controller === undefined) {
+    await db.run(putQuery);
+    response.send(updatedAttribute);
+  } else {
+    response.status(400);
+    response.send(updatedAttribute);
+  }
+});
+
+//  DELETE API
+
+app.delete("/todos/:todoId/", async (request, response) => {
+  const { todoId } = request.params;
+  const deleteTodoQuery = `
+  DELETE FROM
+    todo
+  WHERE
+    id = ${todoId};`;
+
+  await db.run(deleteTodoQuery);
+  response.send("Todo Deleted");
 });
