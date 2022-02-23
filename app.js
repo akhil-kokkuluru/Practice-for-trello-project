@@ -165,6 +165,31 @@ const categorycheck = (aqk) => {
   return resultsk;
 };
 
+// API utilities
+
+let controller;
+const prioritycheck2 = (a) => {
+  result =
+    a.priority === "HIGH" || a.priority === "MEDIUM" || a.priority === "LOW";
+  return result;
+};
+
+const statuscheck2 = (aq) => {
+  results =
+    aq.status === "TO DO" ||
+    aq.status === "IN PROGRESS" ||
+    aq.status === "DONE";
+  return results;
+};
+
+const categorycheck2 = (aqk) => {
+  resultsk =
+    aqk.category === "WORK" ||
+    aqk.category === "HOME" ||
+    aqk.category === "LEARNING";
+  return resultsk;
+};
+
 // 1) GET API
 
 app.get("/todos/", async (request, response) => {
@@ -316,27 +341,31 @@ app.get("/todos/:todoId/", async (request, response) => {
       todo
     WHERE
       id = ${todoId};`;
-  const todoLi = await db.get(getTodoQuery);
+  const todoLi = await db.all(getTodoQuery);
   response.send(todoLi);
 });
 
 //   3) GET API-3
+
 app.get("/agenda/", async (request, response) => {
   const { date } = request.query;
-  let valida = isValid(new Date(date));
-  let datetodo;
-  if (valida) {
-    let dates = format(new Date(date), "yyyy-MM-dd");
-    const agendaQuery = `
+  let date_new;
+  let datevalidation = isValid(new Date(date));
+  if (datevalidation) {
+    date_new = format(new Date(date), "yyyy-MM-dd");
+  }
+
+  const dateQuery = `
     SELECT
     *
     FROM
     todo
-    WHERE
-    due_date = '${dates}';`;
-    datetodo = await db.get(agendaQuery);
-    response.send(datetodo);
-  } else {
+    WHERE due_date = '${date_new}';`;
+
+  if (datevalidation) {
+    const agendaLIst = await db.get(dateQuery);
+    response.send(agendaLIst);
+  } else if (datevalidation === false) {
     response.status(400);
     response.send("Invalid Due Date");
   }
@@ -356,31 +385,6 @@ app.post("/todos/", async (request, response) => {
 });
 
 //   5) PUT API
-
-// API utilities
-
-let controller;
-const prioritycheck2 = (a) => {
-  result =
-    a.priority === "HIGH" || a.priority === "MEDIUM" || a.priority === "LOW";
-  return result;
-};
-
-const statuscheck2 = (aq) => {
-  results =
-    aq.status === "TO DO" ||
-    aq.status === "IN PROGRESS" ||
-    aq.status === "DONE";
-  return results;
-};
-
-const categorycheck2 = (aqk) => {
-  resultsk =
-    aqk.category === "WORK" ||
-    aqk.category === "HOME" ||
-    aqk.category === "LEARNING";
-  return resultsk;
-};
 
 app.put("/todos/:todoId/", async (request, response) => {
   controller = undefined;
