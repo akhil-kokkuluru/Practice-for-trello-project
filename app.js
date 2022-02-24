@@ -171,6 +171,7 @@ let controller;
 const prioritycheck2 = (a) => {
   result =
     a.priority === "HIGH" || a.priority === "MEDIUM" || a.priority === "LOW";
+
   return result;
 };
 
@@ -205,139 +206,158 @@ const camelCase = (arr) => {
 // 1) GET API
 
 app.get("/todos/", async (request, response) => {
-  let statement = undefined;
-  let data = null;
-  let finalQuery;
-  const { status, priority, search_q, category } = request.query;
-  switch (true) {
-    case hasstatus(request.query):
-      sd =
-        request.query.status === "TO DO" ||
-        request.query.status === "IN PROGRESS" ||
-        request.query.status === "DONE";
-      if (sd === false) {
-        statement = "Invalid Todo Status";
-      }
-      if (sd) {
-        statement = undefined;
-        finalQuery = `
-                SELECT
-                *
-                FROM
-                todo
-                WHERE status = '${status}';`;
-      }
-      break;
-    case haspriority(request.query):
-      let k = prioritycheck(request.query);
-      if (k) {
-        statement = undefined;
-      } else if (k === false) {
-        statement = "Invalid Todo Priority";
-      }
-      finalQuery = `
-        SELECT
-        *
-        FROM
-        todo
-        WHERE priority = '${priority}';`;
-      break;
-    case hasboth(request.query):
-      let hk = prioritycheck(request.query);
-      if (hk) {
-        statement = undefined;
-      } else {
-        statement = "Invalid Todo Priority";
-      }
-      let kh = statuscheck(request.query);
-      if (kh === true && hk === false) {
-        statement = "Invalid Todo Priority";
-      } else if (kh !== true && hk !== false) {
-        statement = "Invalid Todo Status";
-      }
-      finalQuery = `SELECT
-        *
-        FROM
-        todo
-        WHERE status = '${status}' AND priority = '${priority}';`;
-      break;
-    case onlysearch(request.query):
-      finalQuery = `
-        SELECT
-        *
-        FROM
-        todo
-        WHERE
-        todo LIKE '%${search_q}%';`;
-      break;
-    case categoryStatus(request.query):
-      let ctc = categorycheck(request.query);
-      let sc = statuscheck(request.query);
-      if (ctc && sc) {
-        statement = undefined;
-      } else if (ctc === false && sc === true) {
-        statement = "Invalid Todo Category";
-      } else if (ctc === true && sc === false) {
-        statement = "Invalid Todo Status";
-      }
-      finalQuery = `
-        SELECT
-        *
-        FROM
-        todo
-        WHERE
-        category = '${category}' and status = '${status}';`;
-      break;
-    case onlycategory(request.query):
-      let g = categorycheck(request.query);
-      if (g) {
-        statement = undefined;
-      } else {
-        statement = "Invalid Todo Category";
-      }
-      finalQuery = `
-        SELECT
-        *
-        FROM
-        todo
-        WHERE
-        category = '${category}';`;
-      break;
-    case catprio(request.query):
-      let Actc = categorycheck(request.query);
-      let Asc = prioritycheck(request.query);
-      if (Actc && Asc) {
-        statement = undefined;
-      } else if (Actc === false && Asc === true) {
-        statement = "Invalid Todo Category";
-      } else if (Actc === true && Asc === false) {
-        statement = "Invalid Todo Priority";
-      }
+  const searchQuery = request.query;
+  let errorMsg;
+  const { status, category, priority, search_q = "" } = searchQuery;
+  const priorityStatusQuery = `
+    SELECT
+    *
+    FROM
+    todo
+    WHERE
+    priority = "${priority}" AND status = "${status}";`;
 
-      categorycheck(request.query);
-      prioritycheck(request.query);
-      finalQuery = `
-        SELECT
-        *
-        FROM
-        todo
-        WHERE
-        category = '${category}' and priority = '${priority}';`;
+  const categoryStatusQuery = `
+    SELECT
+    *
+    FROM
+    todo
+    WHERE
+    category = "${category}" AND status = "${status}";`;
+
+  const categoryPriority = `
+    SELECT
+    *
+    FROM
+    todo
+    WHERE
+    category = "${category}" AND priority = "${priority}";`;
+  const statusQuery = `
+    SELECT
+    *
+    FROM
+    todo 
+    WHERE
+    status = "${status}";`;
+
+  const priorityQuery = `
+    SELECT
+    *
+    FROM
+    todo
+    WHERE
+    priority = "${priority}";`;
+
+  const categoryQuery = `
+    SELECT
+    *
+    FROM
+    todo
+    WHERE
+    category = "${category}";`;
+
+  const DBsearchQuery = `
+    SELECT
+    *
+    FROM
+    todo
+    WHERE
+    todo LIKE "%${search_q}%"`;
+
+  switch (true) {
+    case hasboth(searchQuery):
+      if (prioritycheck2(searchQuery)) {
+        if (statuscheck2(searchQuery)) {
+          errorMsg = undefined;
+          const PSresponse = await db.all(priorityStatusQuery);
+          response.send(PSresponse.map((nums) => camelCase(nums)));
+        } else {
+          errorMsg = "Invalid Todo Status";
+          response.status(400);
+          response.send(errorMsg);
+        }
+      } else {
+        errorMsg = "Invalid Todo Priority";
+        response.status(400);
+        response.send(errorMsg);
+      }
+      break;
+
+    case categoryStatus(searchQuery):
+      if (categorycheck2(searchQuery)) {
+        if (statuscheck2(searchQuery)) {
+          errorMsg = undefined;
+          const SCresponse = await db.all(categoryStatusQuery);
+          response.send(SCresponse.map((nums) => camelCase(nums)));
+        } else {
+          errorMsg = "Invalid Todo Status";
+          response.status(400);
+          response.send(errorMsg);
+        }
+      } else {
+        errorMsg = "Invalid Todo Category";
+        response.status(400);
+        response.send(errorMsg);
+      }
+      break;
+    case catprio(searchQuery):
+      if (categorycheck2(searchQuery)) {
+        if (prioritycheck2(searchQuery)) {
+          errorMsg = undefined;
+          const PCresponse = await db.all(categoryPriority);
+          response.send(PCresponse.map((nums) => camelCase(nums)));
+        } else {
+          errorMsg = "Invalid Todo Priority";
+          response.status(400);
+          response.send(errorMsg);
+        }
+      } else {
+        errorMsg = "Invalid Todo Category";
+        response.status(400);
+        response.send(errorMsg);
+      }
+      break;
+    case onlycategory(searchQuery):
+      if (categorycheck2(searchQuery)) {
+        errorMsg = undefined;
+        const Cresponse = await db.all(categoryQuery);
+        response.send(Cresponse.map((nums) => camelCase(nums)));
+      } else {
+        errorMsg = "Invalid Todo Category";
+        response.status(400);
+        response.send(errorMsg);
+      }
+      break;
+    case onlysearch(searchQuery):
+      const searchresponse = await db.all(DBsearchQuery);
+      response.send(searchresponse.map((nums) => camelCase(nums)));
+      break;
+    case haspriority(searchQuery):
+      if (prioritycheck2(searchQuery)) {
+        errorMsg = undefined;
+        const Presponse = await db.all(priorityQuery);
+        response.send(Presponse.map((nums) => camelCase(nums)));
+      } else {
+        errorMsg = "Invalid Todo Priority";
+        response.status(400);
+        response.send(errorMsg);
+      }
+      break;
+    case hasstatus(searchQuery):
+      if (statuscheck2(searchQuery)) {
+        errorMsg = undefined;
+        const Sresponse = await db.all(statusQuery);
+        response.send(Sresponse.map((nums) => camelCase(nums)));
+      } else {
+        errorMsg = "Invalid Todo Status";
+        response.status(400);
+        response.send(errorMsg);
+      }
       break;
     default:
-      finalQuery = `
-        SELECT
-        *
-        FROM
-        todo;`;
+      response.status(400);
+      response.send("Invalid Search Query");
       break;
-  }
-  if (statement === undefined) {
-    data = await db.all(finalQuery);
-    response.send(data);
-  } else if (statement !== undefined) {
-    response.status(400);
-    response.send(`${statement}`);
   }
 });
 
