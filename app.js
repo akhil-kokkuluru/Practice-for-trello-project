@@ -411,8 +411,13 @@ app.post("/todos/", async (request, response) => {
   const { id, todo, priority, status, category, dueDate } = request.body;
   let datevalidity = isValid(new Date(request.body.dueDate));
 
-  if (datevalidity) {
-    request.body.dueDate = format(new Date(request.body.dueDate), "yyyy-MM-dd");
+  if (dueDate !== undefined) {
+    if (datevalidity) {
+      request.body.dueDate = format(
+        new Date(request.body.dueDate),
+        "yyyy-MM-dd"
+      );
+    }
   }
 
   let barrier;
@@ -448,10 +453,12 @@ app.post("/todos/", async (request, response) => {
 //   5) PUT API
 
 app.put("/todos/:todoId/", async (request, response) => {
+  let { dueDate } = request.body;
   controller = undefined;
   const { todoId } = request.params;
   let updatedAttribute;
   const requestBody = request.body;
+
   switch (true) {
     case requestBody.status !== undefined:
       if (statuscheck2(requestBody)) {
@@ -486,10 +493,7 @@ app.put("/todos/:todoId/", async (request, response) => {
     case requestBody.dueDate !== undefined:
       let datevalidation = isValid(new Date(requestBody.dueDate));
       if (datevalidation) {
-        requestBody.dueDate = format(
-          new Date(requestBody.dueDate),
-          "yyyy-MM-dd"
-        );
+        dueDate = format(new Date(requestBody.dueDate), "yyyy-MM-dd");
         updatedAttribute = "Due Date Updated";
       } else {
         updatedAttribute = "Invalid Due Date";
@@ -527,7 +531,7 @@ SET
   priority = '${priority}',
   status = '${status}',
   category = '${category}',
-  due_date = '${due_date}'
+  due_date = '${dueDate}'
 WHERE
 id = ${todoId}
 `;
@@ -538,6 +542,8 @@ id = ${todoId}
     response.status(400);
     response.send(updatedAttribute);
   }
+  console.log(dueDate);
+  console.log(due_date);
 });
 
 //  DELETE API
