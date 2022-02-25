@@ -440,7 +440,7 @@ app.post("/todos/", async (request, response) => {
   INSERT INTO
     todo (id, todo, priority, status, category, due_date)
   VALUES
-    (${id}, '${todo}', '${priority}', '${status}', '${category}', '${dueDate}');`;
+    (${id}, '${todo}', '${priority}', '${status}', '${category}', '${request.body.dueDate}');`;
   if (barrier === undefined) {
     await db.run(postTodoQuery);
     response.send("Todo Successfully Added");
@@ -448,6 +448,7 @@ app.post("/todos/", async (request, response) => {
     response.status(400);
     response.send(barrier);
   }
+  console.log(request.body.dueDate);
 });
 
 //   5) PUT API
